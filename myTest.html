@@ -1,0 +1,138 @@
+<head>
+    <script type="text/javascript">
+
+function createRangeObj()
+        {
+            var range;
+            if (document.selection)
+            {
+                range = document.selection.createRange();
+            }
+            else if (document.getSelection)
+            {
+				var selection = window.getSelection();
+				range = selection.getRangeAt(0);				
+                range = document.getSelection().getRangeAt(0);
+            }
+
+            return buildCompatibleRange(range);
+        }
+
+        function buildCompatibleRange(range)
+        {
+            if (document.selection)
+            {                
+                range.empty = function ()
+                {
+                    document.selection.empty();
+                }
+            }
+            else if (document.getSelection)
+            {                
+                range.getHtmlText = function ()
+                {
+                    return range.toString();
+                }
+                range.getText = function ()
+                {
+                    return range.toString();
+                }
+                range.empty = function ()
+                {
+                    document.getSelection().removeAllRanges();
+                }
+                range.duplicate = function ()
+                {                    
+                    return buildCompatibleRange(range.cloneRange());
+                }
+				range.move = function (type, offset)
+				{					
+					if (((range.startOffset + offset) < 0) || (range.endOffset + offset) < 0)
+					{
+						return;
+					}
+					range.setStart(range.startContainer, range.startOffset + offset);
+					range.setEnd(range.endContainer, range.endOffset + offset);
+				}
+                range.moveEnd = function (type, offset)
+                {
+                    if ((range.endOffset + offset) < 0)
+                    {
+                        return;
+                    }
+
+                    range.setEnd(range.endContainer, range.endOffset + offset);
+                }
+                range.parentElement = function ()
+                {
+                    return range.endContainer.parentNode;
+                }
+                range.select = function ()
+                {
+                    document.getSelection().removeAllRanges();
+                    document.getSelection().addRange(range);
+                }
+                range.moveToElementText = function (srcObj)
+                {
+                    range.selectNodeContents(srcObj);
+                }
+            }
+
+            return range;
+        }
+	
+function testSelectionIE8()
+{
+	var popUp = window.createPopup(); 
+	var selElement = document.getElementById ("sel");
+   var range = document.selection.createRange();
+   //range.moveToElementText (selElement);
+   range.collapse(true);
+    //var    dr = range.duplicate();
+	range.move("character", -1);
+	range.select();
+	//var tempElement = range.parentElement()
+	//document.selection.empty()
+}
+
+function testSelectionIE11()
+{
+	
+	var selElement = document.getElementById ("sel");
+	var range = new Range();
+	var range = createRangeObj();
+	range.collapse(true);
+	range.move("character", -1);
+	range.select();
+	//var cloneRange = range.duplicate();
+	//range.moveEnd("asd", -1);
+	//range.select();
+	var text = range.getHtmlText();
+	//var cloneText = cloneRange.getHtmlText();
+/*
+		var selection = window.getSelection();
+		//selection.removeAllRanges();
+		var range = selection.getRangeAt(0);
+		var temp = typeof(range.toString());
+		var parentNode = range.endContainer.parentNode;
+        var preCaretRange = range.cloneRange();
+        //preCaretRange.selectNodeContents(editor);
+        range.setEnd(range.endContainer, range.endOffset-1);
+        var caretOffset = preCaretRange.toString().length;
+		var temp = range.toString(); 
+		selection.removeAllRanges();
+		selection.addRange(range);
+		*/
+}
+
+    </script>
+</head>
+<body>
+    Select some content on this page and use the buttons below.<br /><br />
+    <button onclick="testSelectionIE8();">testSelectionIE8</button>
+    <button onclick="testSelectionIE11();">testSelectionIE11</button>
+    <button onclick="ShowStoredSelections();">Show stored selections</button>
+    <br /><br />
+    <div id="sel"><textarea>Some text for selection</textarea></div>
+    <div><b>Some bold text for selection.</b></div>
+</body>
